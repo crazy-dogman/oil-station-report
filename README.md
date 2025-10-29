@@ -164,6 +164,7 @@ git clone https://github.com/crazy-dogman/oil-station-report.git
 
 - **GitHub Issues**：[提交问题](https://github.com/crazy-dogman/oil-station-report/issues)
 - **项目主页**：[GitHub Repository](https://github.com/crazy-dogman/oil-station-report)
+- **微信**：stood__up（是2个_，不是1个_）
 
 ## 🌟 致谢
 
