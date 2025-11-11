@@ -1,0 +1,25 @@
+{
+  "name": "oil-station-report",
+  "version": "0.1.0",
+  "description": "加油站销售数据报告生成器模块化重构",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "cross-env ROLLUP_SKIP_NATIVE=1 vite build",
+    "preview": "cross-env ROLLUP_SKIP_NATIVE=1 vite preview",
+    "check": "node --check src/main.js && node --check src/ui/app-shell.js && node --check src/core/data-store.js && node --check src/core/compute-engine.js && node --check src/core/parser-service.js && node --check src/core/validation-engine.js && node --check src/core/report-engine.js"
+  },
+  "keywords": [
+    "gas-station",
+    "report",
+    "alpine-migration"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "cross-env": "7.0.3",
+    "patch-package": "^8.0.0",
+    "vite": "^5.0.0"
+  }
+}
