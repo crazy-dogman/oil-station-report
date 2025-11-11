@@ -20,6 +20,8 @@ body {
   overflow-x: hidden;
 }
 
+html { overflow-x: hidden; }
+
 #start-overlay {
   position: fixed;
   inset: 0;
@@ -146,6 +148,7 @@ html.overlay-open, body.overlay-open {
   width: min(1200px, 100%);
   margin: 0 auto;
   padding: 48px 24px 80px;
+  box-sizing: border-box; /* 避免宽度+内边距导致移动端水平溢出 */
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -221,6 +224,17 @@ html.overlay-open, body.overlay-open {
     margin: 0 auto;
     width: 100%;
   }
+  /* 方案C（修正）：仅调整大卡片本身为 100% 且居中，避免右侧溢出 */
+  .app-shell {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    transform-origin: center center;
+    border-radius: 28px;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
+  }
+  .app-shell header { padding: 24px 16px; }
+  .shell-body { padding: 20px 16px 32px; }
   .hero-stats {
     width: 100%;
     display: grid !important;
