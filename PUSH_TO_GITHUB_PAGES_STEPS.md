@@ -127,6 +127,30 @@ git push -u origin main
 - 勾选至少 `repo` 权限
 - 推送时在密码处粘贴该 token
 
+### 5.1 远端已存在提交导致推送被拒绝（fetch first）
+如果看到提示：`Updates were rejected because the remote contains work that you do not have locally`，说明远端（GitHub）已有提交（通常是 README/License 占位），本地需要先把远端历史合入：
+
+推荐做法（保留远端历史，基于其之上追加本地提交）：
+```powershell
+git fetch origin
+git pull --rebase origin main
+# 如果发生冲突，按提示解决后：
+#   git add 冲突文件
+#   git rebase --continue
+# rebase 成功后推送：
+git push -u origin main
+```
+
+仅当你明确要覆盖远端（会重写远端 main 历史，危险操作）时使用：
+```powershell
+git push --force-with-lease origin main
+```
+
+（可选）查看本地与远端历史图，便于判断：
+```powershell
+git log --oneline --graph --decorate --all -n 20
+```
+
 ---
 
 ## 6. 启用 GitHub Pages（选择 Actions）
