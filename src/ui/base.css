@@ -98,16 +98,28 @@ html.overlay-open, body.overlay-open {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  z-index: 0;
+  z-index: 0;                   /* 舞台保持在 UI 背后，避免遮挡卡片 */
   font-family: 'Orbitron', sans-serif;
   color: rgba(255, 255, 255, 0.85);
-  pointer-events: none;
+  pointer-events: none;         /* 不拦截交互 */
 }
 
 #experience-stage canvas {
   position: absolute;
   inset: 0;
 }
+
+/* 仅让闪电效果层采用提亮混合，确保手机端也清晰可见 */
+#experience-stage #fx-canvas {
+  position: fixed;              /* 脱离舞台层级，单独叠加到前景 */
+  inset: 0;
+  z-index: 30;                  /* 高于 UI，但仍低于 #start-overlay */
+  mix-blend-mode: plus-lighter; /* 更强提亮 */
+  pointer-events: none;
+}
+
+/* 移除顶部律动的长方形（频谱层） */
+#experience-stage #spectrum-canvas { display: none; }
 
 #experience-stage .experience-overlay {
   position: absolute;

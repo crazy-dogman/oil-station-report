@@ -66,8 +66,8 @@ class VisualEngine {
     this.pixelRatio = window.devicePixelRatio || 1;
     this.drops = [];
     this.clouds = [];
-    this.lightning = 0;
-    this.lightningX = 0.5;
+    this.lightning = 0;         // 0..1 当前闪电强度
+    this.lightningX = 0.5;      // 闪电中心（0..1）
     this.ticker = 0;
     this.resizeHandler = () => this.resize();
     this.resize();
@@ -155,18 +155,7 @@ class VisualEngine {
     gradient.addColorStop(1, '#050a1d');
     this.bgCtx.fillStyle = gradient;
     this.bgCtx.fillRect(0, 0, this.width, this.height);
-
-    if (this.clouds?.length) {
-      this.clouds.forEach((cloud) => {
-        cloud.x += cloud.drift + (RAIN_STATE.mouse.x - 0.5) * 0.4;
-        if (cloud.x > this.width + cloud.width) cloud.x = -cloud.width;
-        if (cloud.x < -cloud.width) cloud.x = this.width + cloud.width;
-        this.bgCtx.fillStyle = `rgba(6, 9, 20, ${cloud.opacity})`;
-        this.bgCtx.beginPath();
-        this.bgCtx.ellipse(cloud.x, cloud.y, cloud.width, cloud.height, 0, 0, Math.PI * 2);
-        this.bgCtx.fill();
-      });
-    }
+    // 取消乌云渲染
   }
 
   drawDrops() {
@@ -186,24 +175,59 @@ class VisualEngine {
 
   drawLightning() {
     if (!this.fxCtx) return;
-    this.fxCtx.clearRect(0, 0, this.width, this.height);
-    if (this.lightning <= 0.01) return;
     const ctx = this.fxCtx;
+    ctx.clearRect(0, 0, this.width, this.height);
+    if (this.lightning <= 0.01) return; // 取消连环闪
+
     const originX = this.width * (this.lightningX ?? 0.5);
-    const gradient = ctx.createLinearGradient(originX, 0, originX, this.height);
-    gradient.addColorStop(0, `rgba(255,255,255,${0.9 * this.lightning})`);
-    gradient.addColorStop(0.3, `rgba(255,255,255,${0.4 * this.lightning})`);
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.width, this.height * 0.9);
-    ctx.fillStyle = `rgba(255,255,255,${0.6 * this.lightning})`;
-    ctx.beginPath();
-    ctx.moveTo(originX, 0);
-    ctx.lineTo(originX - 8, this.height * 0.45);
-    ctx.lineTo(originX + 8, this.height * 0.45);
-    ctx.closePath();
-    ctx.fill();
-    this.lightning *= 0.8;
+    const H = this.height;
+    const W = this.width;
+
+    ctx.save();
+
+    // 1) 全屏轻闪（极致明亮档位X）
+    const globalFlash = Math.min(0.95, 0.42 + this.lightning * 0.58); // 0.42~0.95
+    ctx.fillStyle = `rgba(255,255,255,${globalFlash})`;
+    ctx.fillRect(0, 0, W, H);
+
+    // 2) 竖向强光带（更宽、更亮，中心 100%）
+    const bandHalf = Math.max(80, Math.min(180, W * 0.14)); // 80~180px 或 14% 宽
+    const gradX = ctx.createLinearGradient(originX - bandHalf, 0, originX + bandHalf, 0);
+    gradX.addColorStop(0, `rgba(255,255,255,0)`);
+    gradX.addColorStop(0.5, `rgba(255,255,255,${1.0 * this.lightning})`);
+    gradX.addColorStop(1, `rgba(255,255,255,0)`);
+    ctx.fillStyle = gradX;
+    ctx.fillRect(0, 0, W, H);
+
+    // 2.1) 两侧次强光带（提升体积感）
+    const sideOffset = bandHalf * 1.6;
+    const sideHalf = bandHalf * 0.65;
+    const sideAlpha = 0.35 * this.lightning;
+    const drawSide = (cx) => {
+      const g = ctx.createLinearGradient(cx - sideHalf, 0, cx + sideHalf, 0);
+      g.addColorStop(0, `rgba(255,255,255,0)`);
+      g.addColorStop(0.5, `rgba(255,255,255,${sideAlpha})`);
+      g.addColorStop(1, `rgba(255,255,255,0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    };
+    drawSide(Math.max(0, Math.min(W, originX - sideOffset)));
+    drawSide(Math.max(0, Math.min(W, originX + sideOffset)));
+
+    // 取消倒三角楔形闪电
+
+    // 4) 径向辉光（更高亮、更大半径）
+    const glowRadius = Math.max(H * 0.62, W * 0.62);
+    const rg = ctx.createRadialGradient(originX, H * 0.28, 0, originX, H * 0.28, glowRadius);
+    rg.addColorStop(0, `rgba(255,255,255,${0.55 * this.lightning})`);
+    rg.addColorStop(1, `rgba(255,255,255,0)`);
+    ctx.fillStyle = rg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.restore();
+
+    // 缩短持续时间：更快衰减（测试 0.77）
+    this.lightning *= 0.77;
   }
 
   drawSpectrum() {
@@ -228,7 +252,7 @@ class VisualEngine {
     this.updateDrops();
     this.drawDrops();
     this.drawLightning();
-    this.drawSpectrum();
+    // 取消顶部律动长方形（频谱）
     requestAnimationFrame(() => this.loop());
   }
 
