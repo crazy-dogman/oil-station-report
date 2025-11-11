@@ -35,6 +35,31 @@ git init
 git branch -M main
 ```
 
+### 2.5 配置 Git 用户信息（解决 Author identity unknown）
+首次提交如果提示 Author identity unknown，请设置你的 Git 身份（建议全局设置）：
+
+PowerShell / CMD（全局设置，推荐）：
+```powershell
+git config --global user.name "你的GitHub用户名"
+git config --global user.email "你的GitHub绑定邮箱"
+```
+
+仅在当前仓库设置（不影响其他项目）：
+```powershell
+git config user.name "你的GitHub用户名"
+git config user.email "你的GitHub绑定邮箱"
+```
+
+查看已生效配置：
+```powershell
+git config --list
+```
+
+Windows 上若看到 “LF will be replaced by CRLF” 警告属正常；如需统一换行符，可执行（可选）：
+```powershell
+git config --global core.autocrlf true
+```
+
 ---
 
 ## 3. 查看状态并添加需要提交的文件
@@ -71,6 +96,8 @@ echo node_modules.*>> .gitignore
 git commit -m "ci(pages): add actions deploy + set base + fix favicon"
 ```
 
+如果刚刚因未设置用户名/邮箱而提交失败，完成 2.5 后直接再次执行上面的 commit 命令即可，无需重新 `git add`。
+
 > 若你还有其他改动，也可以使用 `git add -A` 一次性加入全部（前提是 `.gitignore` 正常工作）。
 
 ---
@@ -94,6 +121,11 @@ git push -u origin main
 ```
 
 > 首次推送可能会弹出 GitHub 登录或令牌认证（PAT）。按提示完成即可。
+
+若需要使用 PAT（个人访问令牌）：
+- GitHub 个人头像 → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token
+- 勾选至少 `repo` 权限
+- 推送时在密码处粘贴该 token
 
 ---
 
