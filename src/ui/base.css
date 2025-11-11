@@ -238,21 +238,22 @@ html.overlay-open, body.overlay-open {
   .hero-stats {
     width: 100%;
     display: grid !important;
-    grid-template-columns: repeat(3, 100px);
-    gap: 4px;
-    justify-content: center; /* 居中三张卡 */
-    align-items: center;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 方案A：流式列宽，避免总宽溢出 */
+    gap: 6px;
+    align-items: stretch;
+    justify-content: stretch; /* 与 1fr 列宽配合，填满容器 */
   }
   .hero-stats div {
     min-width: 0 !important;
     max-width: none !important;
     flex: initial !important;
-    width: 100px; /* 保持三列 */
+    width: auto; /* 由 1fr 分配宽度 */
     height: auto;
     min-height: 0;
     padding: 4px 6px;
     border-radius: 12px;
     gap: 4px;
+    box-sizing: border-box; /* 防止因内边距造成的细微溢出 */
   }
   .hero-stats span { font-size: 9px; }
   .hero-stats strong { font-size: 0.95rem; }
