@@ -15,15 +15,24 @@ export function mountAudioEngine() {
     return AUDIO_STUB;
   }
 
-  const ac = new AudioContext();
-  const masterGain = ac.createGain();
-  masterGain.gain.value = 0.6;
-  masterGain.connect(ac.destination);
-
+  // 延迟创建：仅在用户手势（unlock）后创建 AudioContext
+  let ac = null;
+  let masterGain = null;
   let activeScene = null;
   let volume = 0.6;
   let previousVolume = volume;
+  let pendingSceneKey = 'rain';
   const activeIntervals = new Set();
+
+  const ensureContext = () => {
+    if (!ac) {
+      ac = new AudioContext();
+      masterGain = ac.createGain();
+      masterGain.gain.value = volume;
+      masterGain.connect(ac.destination);
+    }
+    return ac;
+  };
 
   const clearIntervals = () => {
     activeIntervals.forEach((id) => clearInterval(id));
@@ -57,6 +66,7 @@ export function mountAudioEngine() {
   }
 
   function playTone(freq, duration, volumeScale = 0.08) {
+    if (!ac) return;
     const osc = ac.createOscillator();
     const gain = ac.createGain();
     osc.type = 'triangle';
@@ -71,6 +81,7 @@ export function mountAudioEngine() {
   }
 
   function triggerThunder(intensity = 1) {
+    if (!ac) return;
     const noiseSource = ac.createBufferSource();
     noiseSource.buffer = createNoiseBuffer('pink');
     const filter = ac.createBiquadFilter();
@@ -108,6 +119,7 @@ export function mountAudioEngine() {
   }
 
   function createRainScene() {
+    if (!ac) return;
     stopScene();
     const rainGain = ac.createGain();
     rainGain.gain.value = 1;
@@ -169,19 +181,21 @@ export function mountAudioEngine() {
   }
 
   function ensureScene() {
-    if (!activeScene) {
-      createRainScene();
-    }
+    if (!ac) return;
+    if (!activeScene) createRainScene();
   }
 
-  function switchScene() {
-    ensureScene();
+  function switchScene(key = 'rain') {
+    pendingSceneKey = key;
+    if (ac) ensureScene();
   }
 
   function setVolume(value) {
     const clamped = Math.max(0, Math.min(1, value));
     volume = clamped;
-    masterGain.gain.setTargetAtTime(clamped, ac.currentTime, 0.1);
+    if (masterGain && ac) {
+      masterGain.gain.setTargetAtTime(clamped, ac.currentTime, 0.1);
+    }
   }
 
   function toggleMute() {
@@ -194,11 +208,9 @@ export function mountAudioEngine() {
   }
 
   async function unlock() {
-    try {
-      await ac.resume();
-    } catch (_) {
-      // ignore resume failure
-    }
+    ensureContext();
+    try { await ac.resume(); } catch (_) {}
+    // 根据 pendingSceneKey 创建场景
     ensureScene();
   }
 
